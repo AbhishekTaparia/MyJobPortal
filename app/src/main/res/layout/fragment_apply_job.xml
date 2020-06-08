@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ApplyJobFragment"
+    android:orientation="vertical">
+
+    <!-- TODO: Update blank fragment layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+
+    <TextView
+        android:id="@+id/textJobPosition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Job Position"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/lightblue"/>
+
+        <TextView
+            android:id="@+id/textJobDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="Description"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="?android:attr/listDivider"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/textSalary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/lightblue"/>
+
+        <TextView
+            android:id="@+id/textSalaryAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18dp"
+            android:text="salary amount"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="?android:attr/listDivider"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/textCompany"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Company Name"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/lightblue"/>
+
+        <TextView
+            android:id="@+id/textCompanyDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="Company Description"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="?android:attr/listDivider"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/lightblue"/>
+
+        <TextView
+            android:id="@+id/textLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="location"/>
+
+        <Button
+            android:id="@+id/buttonApply2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Apply"
+            android:layout_marginTop="20dp"/>
+    </LinearLayout>
+
+</LinearLayout>
