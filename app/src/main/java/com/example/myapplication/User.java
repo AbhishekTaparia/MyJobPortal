@@ -2,12 +2,21 @@ package com.example.myapplication;
 
 public class User {
 
-    private String name,mobile,address,pinCode,degree,currentCity,gender,dob;
+    private String name;
+    private String mobile;
+    private String address;
+    private String pinCode;
+    private String degree;
+    private String currentCity;
+    private String gender;
+    private String dob;
+    private String jobApplied;
+    private String cv;
 
     public User() {
     }
 
-    public User(String name, String mobile, String address, String pinCode, String degree, String currentCity, String gender, String dob) {
+    public User(String name, String mobile, String address, String pinCode, String degree, String currentCity, String gender, String dob,String jobApplied,String cv) {
         this.name = name;
         this.mobile = mobile;
         this.address = address;
@@ -16,6 +25,8 @@ public class User {
         this.currentCity = currentCity;
         this.gender = gender;
         this.dob = dob;
+        this.jobApplied = jobApplied;
+        this.cv = cv;
     }
 
     public String getName() {
@@ -80,5 +91,13 @@ public class User {
 
     public void setDob(String dob) {
         this.dob = dob;
+    }
+
+    public String getJobApplied() {
+        return jobApplied;
+    }
+
+    public void setJobApplied(String jobApplied) {
+        this.jobApplied = jobApplied;
     }
 }

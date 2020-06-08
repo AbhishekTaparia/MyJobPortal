@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -19,6 +20,8 @@ import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,19 +31,30 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
+import static android.app.Activity.RESULT_OK;
 
 
 public class ProfileFragment extends Fragment implements View.OnClickListener {
 
+    private static final int PICK_PDF_REQUEST = 1;
+
+    private Uri pdfUri;
+
     private EditText editTextName,editTextMobile,editTextAddress,editTextPin,editTextDOB,editTextCurrentCity,editTextDegree;
-    private Button buttonUpdate;
+    private Button buttonUpdate,buttonUploadCV;
     private RadioButton radioMale,radioFemale;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabaseRef;
-    private String gender;
+    private String gender,jobApplied;
 
 
 
@@ -80,12 +94,14 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         editTextCurrentCity=(EditText)view.findViewById(R.id.editTextCurrentCity);
         editTextDegree=(EditText)view.findViewById(R.id.editTextDegree);
         gender=null;
+        jobApplied="";
 
         radioMale=(RadioButton)view.findViewById(R.id.radioMale);
         radioFemale=(RadioButton)view.findViewById(R.id.radioFemale);
 
 
         buttonUpdate=(Button)view.findViewById(R.id.buttonUpdate);
+        buttonUploadCV=(Button)view.findViewById(R.id.buttonUploadCV);
 
         progressBar=(ProgressBar)view.findViewById(R.id.progressbar);
 
@@ -105,6 +121,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                         editTextDOB.setText(user.getDob());
                         editTextPin.setText(user.getPinCode());
                         editTextMobile.setText(user.getMobile());
+                        jobApplied=user.getJobApplied();
                         if(user.getGender().equals("Male")){
                             radioMale.setChecked(true);
                         }else{
@@ -136,6 +153,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         editTextDOB.setOnClickListener(this);
         buttonUpdate.setOnClickListener(this);
+        buttonUploadCV.setOnClickListener(this);
         return view;
     }
 
@@ -149,6 +167,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
             case R.id.buttonUpdate:{
                 addData();
+                return;
+            }
+            case R.id.buttonUploadCV:{
+                openFileChooser();
                 return;
             }
         }
@@ -202,11 +224,52 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             gender="Male";
         else
             gender="Female";
+
+
         User user_=new User(editTextName.getText().toString(),editTextMobile.getText().toString(),
                 editTextAddress.getText().toString(),editTextPin.getText().toString(),
-                editTextDegree.getText().toString(),editTextCurrentCity.getText().toString(),gender,editTextDOB.getText().toString());
-        String uploadId = mDatabaseRef.push().getKey();
+                editTextDegree.getText().toString(),editTextCurrentCity.getText().toString(),gender,editTextDOB.getText().toString(),jobApplied,"");
         mDatabaseRef.child(user.getUid()).setValue(user_);
+    }
+
+    private void openFileChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        startActivityForResult(Intent.createChooser(intent,"Upload your CV"), PICK_PDF_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == PICK_PDF_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
+            pdfUri = data.getData();
+            Log.d("pdfUri",pdfUri.getPath());
+            String fileName=mAuth.getCurrentUser().getEmail();
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+            storageReference.child("uploadCV").child(fileName).putFile(pdfUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    taskSnapshot.getMetadata().getReference().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
+                            Map<String,Object> updateValues=new HashMap<>();
+                            updateValues.put("/"+mAuth.getCurrentUser().getUid()+"/cv",uri.toString());
+                            databaseReference.updateChildren(updateValues);
+                            Toast.makeText(getContext(),"Upload Success",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getContext(),"Upload Failed",Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
     }
 
 }
