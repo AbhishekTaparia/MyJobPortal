@@ -12,11 +12,15 @@ public class User {
     private String dob;
     private String jobApplied;
     private String cv;
+    private String imageURL;
 
     public User() {
     }
 
-    public User(String name, String mobile, String address, String pinCode, String degree, String currentCity, String gender, String dob,String jobApplied,String cv) {
+
+
+    public User(String name, String mobile, String address, String pinCode,
+                String degree, String currentCity, String gender, String dob, String jobApplied, String cv, String imageURL) {
         this.name = name;
         this.mobile = mobile;
         this.address = address;
@@ -27,6 +31,7 @@ public class User {
         this.dob = dob;
         this.jobApplied = jobApplied;
         this.cv = cv;
+        this.imageURL = imageURL;
     }
 
     public String getName() {
@@ -99,5 +104,21 @@ public class User {
 
     public void setJobApplied(String jobApplied) {
         this.jobApplied = jobApplied;
+    }
+
+    public String getCv() {
+        return cv;
+    }
+
+    public void setCv(String cv) {
+        this.cv = cv;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
     }
 }

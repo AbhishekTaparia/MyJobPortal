@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -34,6 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -45,8 +47,9 @@ import static android.app.Activity.RESULT_OK;
 public class ProfileFragment extends Fragment implements View.OnClickListener {
 
     private static final int PICK_PDF_REQUEST = 1;
+    private static final int PICK_IMAGE_REQUEST = 2;
 
-    private Uri pdfUri;
+    private Uri pdfUri,imageUri;
 
     private EditText editTextName,editTextMobile,editTextAddress,editTextPin,editTextDOB,editTextCurrentCity,editTextDegree;
     private Button buttonUpdate,buttonUploadCV;
@@ -55,6 +58,9 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabaseRef;
     private String gender,jobApplied;
+    private ImageView imageViewDP;
+
+    private String cv,imageURL;
 
 
 
@@ -95,6 +101,8 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         editTextDegree=(EditText)view.findViewById(R.id.editTextDegree);
         gender=null;
         jobApplied="";
+        cv="";
+        imageURL="";
 
         radioMale=(RadioButton)view.findViewById(R.id.radioMale);
         radioFemale=(RadioButton)view.findViewById(R.id.radioFemale);
@@ -105,9 +113,11 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         progressBar=(ProgressBar)view.findViewById(R.id.progressbar);
 
+        imageViewDP=(ImageView)view.findViewById(R.id.imageView);
+
         mAuth = FirebaseAuth.getInstance();
         mDatabaseRef = FirebaseDatabase.getInstance().getReference("users");
-        mDatabaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabaseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot snap: dataSnapshot.getChildren()){
@@ -127,7 +137,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                         }else{
                             radioFemale.setChecked(true);
                         }
-
+                        cv=user.getCv();
+                        imageURL=user.getImageURL();
+                        Picasso.with(getActivity()).load(imageURL).into(imageViewDP);
+                        Log.d("imageURL",user.getImageURL());
 
                     }
 
@@ -154,6 +167,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         editTextDOB.setOnClickListener(this);
         buttonUpdate.setOnClickListener(this);
         buttonUploadCV.setOnClickListener(this);
+        imageViewDP.setOnClickListener(this);
         return view;
     }
 
@@ -171,6 +185,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             }
             case R.id.buttonUploadCV:{
                 openFileChooser();
+                return;
+            }
+            case R.id.imageView:{
+                openImageChooser();
                 return;
             }
         }
@@ -228,7 +246,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         User user_=new User(editTextName.getText().toString(),editTextMobile.getText().toString(),
                 editTextAddress.getText().toString(),editTextPin.getText().toString(),
-                editTextDegree.getText().toString(),editTextCurrentCity.getText().toString(),gender,editTextDOB.getText().toString(),jobApplied,"");
+                editTextDegree.getText().toString(),editTextCurrentCity.getText().toString(),gender,editTextDOB.getText().toString(),jobApplied,cv,imageURL);
         mDatabaseRef.child(user.getUid()).setValue(user_);
     }
 
@@ -236,6 +254,12 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/pdf");
         startActivityForResult(Intent.createChooser(intent,"Upload your CV"), PICK_PDF_REQUEST);
+    }
+
+    private void openImageChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent,"Upload your profile pic"), PICK_IMAGE_REQUEST);
     }
 
     @Override
@@ -257,7 +281,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                             Map<String,Object> updateValues=new HashMap<>();
                             updateValues.put("/"+mAuth.getCurrentUser().getUid()+"/cv",uri.toString());
                             databaseReference.updateChildren(updateValues);
-                            Toast.makeText(getContext(),"Upload Success",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(),"CV Upload Success",Toast.LENGTH_SHORT).show();
                         }
                     });
 
@@ -265,10 +289,38 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(getContext(),"Upload Failed",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(),"CV Upload Failed",Toast.LENGTH_SHORT).show();
                 }
             });
 
+        }
+        else if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null){
+            imageUri=data.getData();
+            String fileName=mAuth.getCurrentUser().getEmail();
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+            storageReference.child("uploadProfilePic").child(fileName).putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    taskSnapshot.getMetadata().getReference().getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
+                            Map<String,Object> updateValues=new HashMap<>();
+                            updateValues.put("/"+mAuth.getCurrentUser().getUid()+"/imageURL",uri.toString());
+                            databaseReference.updateChildren(updateValues);
+                            Picasso.with(getActivity()).load(imageUri).into(imageViewDP);
+                            Toast.makeText(getContext(),"Pic Upload Success",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getContext(),"Pic Upload Failed",Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
